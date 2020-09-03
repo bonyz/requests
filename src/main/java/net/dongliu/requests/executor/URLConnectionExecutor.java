@@ -12,12 +12,19 @@ import net.dongliu.requests.utils.URLUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.*;
 import java.nio.charset.Charset;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -89,7 +96,6 @@ class URLConnectionExecutor implements HttpExecutor {
                 || status == TEMPORARY_REDIRECT || status == PERMANENT_REDIRECT;
     }
 
-
     private RawResponse doRequest(Request request) {
         Charset charset = request.charset();
         URL url = URLUtils.joinUrl(request.url(), URLUtils.toStringParameters(request.params()), charset);
@@ -118,14 +124,23 @@ class URLConnectionExecutor implements HttpExecutor {
         // deal with https
         if (conn instanceof HttpsURLConnection) {
             HttpsURLConnection httpsConn = (HttpsURLConnection) conn;
-            if (!request.verify()) {
-                SSLSocketFactory ssf = SSLSocketFactories.getTrustAllSSLSocketFactory();
-                httpsConn.setSSLSocketFactory(ssf);
-                // do not verify host of certificate
-                httpsConn.setHostnameVerifier(NopHostnameVerifier.getInstance());
-            } else if (request.keyStore() != null) {
-                SSLSocketFactory ssf = SSLSocketFactories.getCustomTrustSSLSocketFactory(request.keyStore());
-                httpsConn.setSSLSocketFactory(ssf);
+            
+            //add custom sslSocketFactory
+            if (request.sslSocketFactory() != null) {
+            	httpsConn.setSSLSocketFactory(request.sslSocketFactory());
+            	if (!request.verify()) {
+            		httpsConn.setHostnameVerifier(NopHostnameVerifier.getInstance());
+            	}
+            } else {
+            	if (!request.verify()) {
+                    SSLSocketFactory ssf = SSLSocketFactories.getTrustAllSSLSocketFactory();
+                    httpsConn.setSSLSocketFactory(ssf);
+                    // do not verify host of certificate
+                    httpsConn.setHostnameVerifier(NopHostnameVerifier.getInstance());
+                } else if (request.keyStore() != null) {
+                    SSLSocketFactory ssf = SSLSocketFactories.getCustomTrustSSLSocketFactory(request.keyStore());
+                    httpsConn.setSSLSocketFactory(ssf);
+                } 
             }
         }
 

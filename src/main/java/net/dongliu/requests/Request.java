@@ -13,6 +13,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.net.ssl.SSLSocketFactory;
+
 /**
  * Http request
  *
@@ -45,6 +47,8 @@ public class Request implements Serializable {
     private final SessionContext sessionContext;
     private final URL url;
     private final boolean keepAlive;
+    @Nullable
+    private final SSLSocketFactory sslSocketFactory;
 
     Request(RequestBuilder builder) {
         method = builder.method;
@@ -66,6 +70,7 @@ public class Request implements Serializable {
         keepAlive = builder.keepAlive;
         this.url = builder.url;
         this.params = builder.params;
+		this.sslSocketFactory = builder.sslSocketFactory;
     }
 
     /**
@@ -310,5 +315,9 @@ public class Request implements Serializable {
 
     public boolean keepAlive() {
         return keepAlive;
+    }
+    
+    public SSLSocketFactory sslSocketFactory () {
+        return sslSocketFactory;
     }
 }

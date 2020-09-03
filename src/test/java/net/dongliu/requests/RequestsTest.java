@@ -12,9 +12,14 @@ import org.junit.Test;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import static org.junit.Assert.*;
 
@@ -177,5 +182,30 @@ public class RequestsTest {
                 .send().readToText();
         assertFalse(text.isEmpty());
         assertTrue(statusCode[0] > 0);
+    }
+    
+    
+    
+    @Test
+    public void testCustomSslFactory() {
+    	try {
+    		TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+                public X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+                public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                }
+                public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                }
+            }};
+        	SSLContext context = SSLContext.getInstance("TLSv1.2");
+    		context.init(null, trustAllCerts, new java.security.SecureRandom());
+        	Response<String> response = Requests.get("https://127.0.0.1:8443/https")
+                    .verify(false).sslSocketFactory(context.getSocketFactory()).send().toTextResponse();
+            assertEquals(200, response.statusCode());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	
     }
 }

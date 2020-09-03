@@ -18,6 +18,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.util.*;
 
+import javax.net.ssl.SSLSocketFactory;
+
 /**
  * Http Request builder
  *
@@ -48,6 +50,8 @@ public final class RequestBuilder {
     boolean keepAlive = true;
     @Nullable
     KeyStore keyStore;
+    @Nullable
+    SSLSocketFactory sslSocketFactory;
 
     private List<? extends Interceptor> interceptors = Collections.emptyList();
 
@@ -74,6 +78,7 @@ public final class RequestBuilder {
         keyStore = request.keyStore();
         this.url = request.url();
         this.params = request.params();
+        sslSocketFactory = request.sslSocketFactory();
     }
 
     public RequestBuilder method(String method) {
@@ -461,6 +466,12 @@ public final class RequestBuilder {
      */
     RequestBuilder sessionContext(@Nullable SessionContext sessionContext) {
         this.sessionContext = sessionContext;
+        return this;
+    }
+    
+    
+    public RequestBuilder sslSocketFactory(SSLSocketFactory sslSocketFactory) {
+        this.sslSocketFactory = sslSocketFactory;
         return this;
     }
 }
